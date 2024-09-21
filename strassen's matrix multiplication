@@ -1,0 +1,186 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+int** allocateMatrix(int size) {
+    int** matrix = (int**)malloc(size * sizeof(int*));
+    for (int i = 0; i < size; i++) {
+        matrix[i] = (int*)malloc(size * sizeof(int));
+    }
+    return matrix;
+}
+
+
+void addMatrix(int** A, int** B, int** result, int size) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            result[i][j] = A[i][j] + B[i][j];
+        }
+    }
+}
+
+
+void subtractMatrix(int** A, int** B, int** result, int size) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            result[i][j] = A[i][j] - B[i][j];
+        }
+    }
+}
+
+
+void strassen(int** A, int** B, int** C, int size) {
+    
+    if (size == 1) {
+        C[0][0] = A[0][0] * B[0][0];
+        return;
+    }
+
+    int newSize = size / 2;
+    int** A11 = allocateMatrix(newSize);
+    int** A12 = allocateMatrix(newSize);
+    int** A21 = allocateMatrix(newSize);
+    int** A22 = allocateMatrix(newSize);
+    int** B11 = allocateMatrix(newSize);
+    int** B12 = allocateMatrix(newSize);
+    int** B21 = allocateMatrix(newSize);
+    int** B22 = allocateMatrix(newSize);
+    int** C11 = allocateMatrix(newSize);
+    int** C12 = allocateMatrix(newSize);
+    int** C21 = allocateMatrix(newSize);
+    int** C22 = allocateMatrix(newSize);
+    int** M1 = allocateMatrix(newSize);
+    int** M2 = allocateMatrix(newSize);
+    int** M3 = allocateMatrix(newSize);
+    int** M4 = allocateMatrix(newSize);
+    int** M5 = allocateMatrix(newSize);
+    int** M6 = allocateMatrix(newSize);
+    int** M7 = allocateMatrix(newSize);
+    int** temp1 = allocateMatrix(newSize);
+    int** temp2 = allocateMatrix(newSize);
+
+    
+    for (int i = 0; i < newSize; i++) {
+        for (int j = 0; j < newSize; j++) {
+            A11[i][j] = A[i][j];
+            A12[i][j] = A[i][j + newSize];
+            A21[i][j] = A[i + newSize][j];
+            A22[i][j] = A[i + newSize][j + newSize];
+
+            B11[i][j] = B[i][j];
+            B12[i][j] = B[i][j + newSize];
+            B21[i][j] = B[i + newSize][j];
+            B22[i][j] = B[i + newSize][j + newSize];
+        }
+    }
+
+
+    addMatrix(A11, A22, temp1, newSize);
+    addMatrix(B11, B22, temp2, newSize);
+    strassen(temp1, temp2, M1, newSize);
+
+    
+    addMatrix(A21, A22, temp1, newSize);
+    strassen(temp1, B11, M2, newSize);
+
+    
+    subtractMatrix(B12, B22, temp1, newSize);
+    strassen(A11, temp1, M3, newSize);
+
+    
+    subtractMatrix(B21, B11, temp1, newSize);
+    strassen(A22, temp1, M4, newSize);
+
+    
+    addMatrix(A11, A12, temp1, newSize);
+    strassen(temp1, B22, M5, newSize);
+
+    
+    subtractMatrix(A21, A11, temp1, newSize);
+    addMatrix(B11, B12, temp2, newSize);
+    strassen(temp1, temp2, M6, newSize);
+
+    
+    subtractMatrix(A12, A22, temp1, newSize);
+    addMatrix(B21, B22, temp2, newSize);
+    strassen(temp1, temp2, M7, newSize);
+
+    
+    addMatrix(M1, M4, temp1, newSize);
+    subtractMatrix(temp1, M5, temp2, newSize);
+    addMatrix(temp2, M7, C11, newSize);
+
+    
+    addMatrix(M3, M5, C12, newSize);
+
+    
+    addMatrix(M2, M4, C21, newSize);
+
+    
+    subtractMatrix(M1, M2, temp1, newSize);
+    addMatrix(temp1, M3, temp2, newSize);
+    addMatrix(temp2, M6, C22, newSize);
+
+    
+    for (int i = 0; i < newSize; i++) {
+        for (int j = 0; j < newSize; j++) {
+            C[i][j] = C11[i][j];
+            C[i][j + newSize] = C12[i][j];
+            C[i + newSize][j] = C21[i][j];
+            C[i + newSize][j + newSize] = C22[i][j];
+        }
+    }
+
+    
+    free(A11); free(A12); free(A21); free(A22);
+    free(B11); free(B12); free(B21); free(B22);
+    free(C11); free(C12); free(C21); free(C22);
+    free(M1); free(M2); free(M3); free(M4); free(M5); free(M6); free(M7);
+    free(temp1); free(temp2);
+}
+
+
+void printMatrix(int** matrix, int size) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int size = 2; 
+    
+    
+    int** A = allocateMatrix(size);
+    int** B = allocateMatrix(size);
+    int** C = allocateMatrix(size);
+
+    
+    A[0][0] = 1; A[0][1] = 2;
+    A[1][0] = 3; A[1][1] = 4;
+
+    B[0][0] = 5; B[0][1] = 6;
+    B[1][0] = 7; B[1][1] = 8;
+
+    
+    strassen(A, B, C, size);
+
+    
+    printf("Matrix A:\n");
+    printMatrix(A, size);
+
+    printf("\nMatrix B:\n");
+    printMatrix(B, size);
+
+    printf("\nMatrix C (A x B):\n");
+    printMatrix(C, size);
+
+    
+    free(A);
+    free(B);
+    free(C);
+
+    return 0;
+}
