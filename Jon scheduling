@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Job {
+    int start;
+    int finish;
+};
+
+
+int compare(const void* a, const void* b) {
+    struct Job* jobA = (struct Job*)a;
+    struct Job* jobB = (struct Job*)b;
+    return (jobA->finish - jobB->finish);
+}
+
+
+void jobScheduling(struct Job jobs[], int n) {
+    
+    qsort(jobs, n, sizeof(struct Job), compare);
+
+    printf("Selected jobs:\n");
+
+   
+    int i = 0;
+    printf("Job %d: Start = %d, Finish = %d\n", i+1, jobs[i].start, jobs[i].finish);
+
+    
+    for (int j = 1; j < n; j++) {
+        
+        if (jobs[j].start >= jobs[i].finish) {
+            printf("Job %d: Start = %d, Finish = %d\n", j+1, jobs[j].start, jobs[j].finish);
+            i = j;  
+        }
+    }
+}
+
+int main() {
+    
+    struct Job jobs[] = {{1, 2}, {3, 4}, {0, 6}, {5, 7}, {8, 9}, {5, 9}};
+    int n = sizeof(jobs) / sizeof(jobs[0]);
+
+    
+    jobScheduling(jobs, n);
+
+    return 0;
+}
