@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+typedef struct {
+    int weight;
+    int value;
+} Item;
+
+
+typedef struct {
+    int level;
+    int profit;
+    int weight;
+    float bound;
+} Node;
+
+
+int compare(const void *a, const void *b) {
+    float r1 = ((Item *)b)->value / (float)((Item *)b)->weight;
+    float r2 = ((Item *)a)->value / (float)((Item *)a)->weight;
+    return r1 > r2 ? 1 : -1;
+}
+
+
+float calculateBound(Node u, int n, int W, Item items[]) {
+    if (u.weight >= W) return 0;
+    float profitBound = u.profit;
+    int j = u.level + 1;
+    int totWeight = u.weight;
+
+    while (j < n && totWeight + items[j].weight <= W) {
+        totWeight += items[j].weight;
+        profitBound += items[j].value;
+        j++;
+    }
+
+    if (j < n) {
+        profitBound += (W - totWeight) * (items[j].value / (float)items[j].weight);
+    }
+
+    return profitBound;
+}
+
+
+int knapsack(Item items[], int n, int W) {
+    qsort(items, n, sizeof(Item), compare);
+
+    Node u, v;
+    u.level = -1;
+    u.profit = u.weight = 0;
+    u.bound = calculateBound(u, n, W, items);
+
+    int maxProfit = 0;
+
+    Node queue[1000];
+    int front = 0, rear = 0;
+    queue[rear++] = u;
+
+    while (front < rear) {
+        u = queue[front++];
+        
+        if (u.level == n - 1) continue;
+
+        v.level = u.level + 1;
+
+        v.weight = u.weight + items[v.level].weight;
+        v.profit = u.profit + items[v.level].value;
+
+        if (v.weight <= W && v.profit > maxProfit) {
+            maxProfit = v.profit;
+        }
+
+        v.bound = calculateBound(v, n, W, items);
+        if (v.bound > maxProfit) {
+            queue[rear++] = v;
+        }
+
+        v.weight = u.weight;
+        v.profit = u.profit;
+        v.bound = calculateBound(v, n, W, items);
+        if (v.bound > maxProfit) {
+            queue[rear++] = v;
+        }
+    }
+
+    return maxProfit;
+}
+
+int main() {
+    
+    int n = 4; 
+    int W = 50; 
+
+    
+    Item items[] = {
+        {10, 60},  
+        {20, 100}, 
+        {30, 120}, 
+        {25, 90}
+    };
+
+    int maxProfit = knapsack(items, n, W);
+    printf("Maximum profit: %d\n", maxProfit);
+
+    return 0;
+}
+
